@@ -1,34 +1,44 @@
 #include "check.h"
 
 uev_t timer, file;
-int   counter = 10;
+int counter = 10;
 
-static void cb(uev_t *w, void *arg, int events)
-{
-	if (UEV_ERROR == events)
-		fprintf(stderr, "timer watcher failed, ignoring ...\n");
+static void cb(uev_t *w, void *arg, int events) {
+    if (UEV_ERROR == events) fprintf(stderr, "timer watcher failed, ignoring ...\n");
 
-	if (counter--)
-		return;
+    printf("cb counter:%d\n", counter);
 
-	uev_exit(w->ctx);
+    if (counter--) return;
+
+    uev_exit(w->ctx);
 }
 
-int main(void)
-{
-	uev_ctx_t ctx;
-	FILE *fp;
+void uev_dump(uev_ctx_t *ctx) {
+    if (!ctx) return;
 
-	uev_init(&ctx);
-	uev_timer_init(&ctx, &timer, cb, NULL, 100, 100);
+    printf("==== uev dump ===\n");
+    printf("        fd:%d\n", ctx->fd);
+    printf(" maxevents:%d\n", ctx->maxevents);
+    printf("   running:%d\n", ctx->running);
+    printf(" workaound:%d\n", ctx->workaround);
+    printf("    active:%d\n", ctx->watchers->active);
+    printf("      type:%d\n", ctx->watchers->type);
+}
 
-	fp = fopen("/dev/one", "r");
-	if (fp)
-		uev_io_init(&ctx, &file, cb, NULL, fileno(fp), UEV_READ);
+int main(void) {
+    uev_ctx_t ctx;
+    FILE *fp;
 
-	uev_run(&ctx, 0);
+    uev_init(&ctx);
+    uev_timer_init(&ctx, &timer, cb, NULL, 100, 100);
 
-	uev_exit(&ctx);	/* Should not hang event loop, troglobit/uftpd#16 */
+    uev_dump(&ctx);
+    fp = fopen("/dev/one", "r");
+    if (fp) uev_io_init(&ctx, &file, cb, NULL, fileno(fp), UEV_READ);
 
-	return 0;
+    uev_run(&ctx, 0);
+
+    uev_exit(&ctx); /* Should not hang event loop, troglobit/uftpd#16 */
+
+    return 0;
 }
