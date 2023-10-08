@@ -98,7 +98,7 @@ static void pipe_read_cb(uev_t *w, void *arg, int events)
 		return;
 	}
 
-//	fprintf(stderr, "READ %.*s %d\n", len, msg, len);
+	fprintf(stderr, "READ --> %.*s %d\n", len, msg, len);
 	fprintf(stderr, "%.*s.%d ", len, msg, len);
 }
 
@@ -116,7 +116,7 @@ static void pipe_write_cb(uev_t *w, void *arg, int events)
 		return;
 	}
 
-//	fprintf(stderr, "WRITE %.*s %d\n", my->counter, msg, my->counter);
+	fprintf(stderr, "WRITE --> %.*s.%d\n", my->counter, msg, my->counter);
 	fprintf(stderr, "%d ", my->counter);
 	period = my->counter + 5;
 	my->counter++;
@@ -161,8 +161,8 @@ int main(void)
 	watchdog = &wdt;
 
 	/* Periodic background task */
-	uev_timer_init(&ctx, &periodic, periodic_task, NULL, 200, 200);
-
+	uev_timer_init(&ctx, &periodic, periodic_task, NULL, 20000, 20);
+	uev_dump(&ctx);
 	/* Start event loop */
 	uev_run(&ctx, 0);
 

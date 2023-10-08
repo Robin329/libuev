@@ -13,7 +13,7 @@ static void cb(uev_t *w, void *arg, int events)
 
 	if (UEV_ERROR == events)
 		fprintf(stderr, "timer watcher failed, ignoring ...\n");
-
+	fprintf(stderr, "cb is call\n");
 	gettimeofday(&now, NULL);
 	fail_unless(now.tv_sec == start.tv_sec + TIMEOUT);
 
@@ -30,6 +30,8 @@ int main(void)
 	uev_init(&ctx);
 	uev_timer_init(&ctx, &w, cb, NULL, TIMEOUT * 1000, 0);
 	gettimeofday(&start, NULL);
+
+	uev_dump(&ctx);
 
 	rc = uev_run(&ctx, 0);
 	fail_unless(result == 0);

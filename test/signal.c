@@ -42,20 +42,17 @@ typedef struct {
 } arg_t;
 
 /* Stack is not shared between parent and child, only the heap. */
-static arg_t arg = {
-	.magic = 1337,
-	.ptr = NULL
-};
+static arg_t arg = { .magic = 1337, .ptr = NULL };
 
 static int callback(arg_t *arg, int event, void *foo)
 {
 	arg_t *event_arg = (arg_t *)foo;
 
-	printf("child[%d] magic %d ptr %p, event %d event arg %p\n",
-	       getpid(), arg->magic, arg->ptr, event, event_arg);
+	printf("child[%d] magic %d ptr %p, event %d event arg %p\n", getpid(),
+	       arg->magic, arg->ptr, event, event_arg);
 
 	arg->magic = 7331;
-	arg->ptr   = &event_arg;
+	arg->ptr = &event_arg;
 
 	/* Cause segfault! */
 #if DO_SEGFAULT == 1
@@ -72,7 +69,8 @@ static void sig_cb(uev_t *w, void *cbarg, int events)
 
 	switch (w->signo) {
 	case SIGSEGV:
-//		printf("Got SIGSEGV (%d) from PID %d\n", w->siginfo.ssi_signo, w->siginfo.ssi_pid);
+		printf("Got SIGSEGV (%d) from PID %d\n", w->siginfo.ssi_signo,
+		       w->siginfo.ssi_pid);
 		warnx("PID %d caused segfault.", getpid());
 		exit(-1);
 		break;
@@ -82,7 +80,8 @@ static void sig_cb(uev_t *w, void *cbarg, int events)
 			err(1, "wrong child exited pid %d vs ssi_pid %d",
 			    arg->pid, w->siginfo.ssi_pid);
 
-		warnx("Got SIGCHLD (%d), PID %d exited, bye.", w->siginfo.ssi_signo, arg->pid);
+		warnx("Got SIGCHLD (%d), PID %d exited, bye.",
+		      w->siginfo.ssi_signo, arg->pid);
 		break;
 
 	default:
@@ -96,6 +95,7 @@ static void work_cb(uev_t *w, void *cbarg, int events)
 	pid_t pid;
 	int rc = 0;
 
+	printf("work_cb enter <--\n");
 	pid = fork();
 	if (-1 == pid)
 		err(1, "fork");
@@ -108,13 +108,16 @@ static void work_cb(uev_t *w, void *cbarg, int events)
 		err(1, "waitpid");
 
 	if (WIFEXITED(rc))
-		printf("Child %d exited normally => %d\n", pid, WEXITSTATUS(rc));
+		printf("Child %d exited normally => %d\n", pid,
+		       WEXITSTATUS(rc));
 	else if (WCOREDUMP(rc))
-		printf("Child %d crashed%s\n", pid, DO_SEGFAULT
-		       ? ", as expected, everything is OK."
-		       : ".  This should not happen!");
+		printf("Child %d crashed%s\n", pid,
+		       DO_SEGFAULT ? ", as expected, everything is OK." :
+					   ".  This should not happen!");
 	else
 		printf("Child %d did not exit normally!\n", pid);
+
+	printf("work_cb enter -->\n");
 }
 
 static void exit_cb(uev_t *w, void *arg, int events)
@@ -136,6 +139,8 @@ int main(void)
 	uev_signal_init(&ctx, &sigchld, sig_cb, &arg, SIGCHLD);
 	uev_timer_init(&ctx, &timeout, work_cb, &arg, 400, 0);
 	uev_timer_init(&ctx, &deadline, exit_cb, NULL, 1000, 0);
+
+	uev_dump(&ctx);
 
 	/* Start event loop */
 	return uev_run(&ctx, 0);

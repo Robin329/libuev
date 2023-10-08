@@ -53,6 +53,8 @@ int main(void)
 	uev_cron_init(&ctx, &cron1, cb, NULL, tomorrow.tv_sec, 24 * 60 * 60);
 	uev_cron_init(&ctx, &cron2, cb, NULL, tomorrow.tv_sec, 24 * 60 * 60);
 
+	uev_dump(&ctx);
+
 	return uev_run(&ctx, 0);
 }
 

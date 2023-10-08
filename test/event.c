@@ -30,13 +30,13 @@
 #define LAPS 10
 pid_t pid;
 
+static int g_count = LAPS;
 static void cb(uev_t *w, void *arg, int events)
 {
-	static int num = LAPS;
-
-	num--;
-//	printf("Got event %d ...\n", LAPS - num);
-	if (num == 0) {
+	printf("arg:%d\n", *(int *)arg);
+	g_count--;
+	printf("Got event %d ...\n", LAPS - g_count);
+	if (g_count == 0) {
 		waitpid(pid, NULL, 0);
 		uev_exit(w->ctx);
 	}
@@ -52,7 +52,7 @@ int main(void)
 	uev_init(&ctx);
 
 	/* Setup callbacks */
-	uev_event_init(&ctx, &ev, cb, NULL);
+	uev_event_init(&ctx, &ev, cb, (void *)&g_count);
 
 	pid = fork();
 	if (-1 == pid)

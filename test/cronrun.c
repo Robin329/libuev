@@ -70,6 +70,8 @@ int main(void)
 	interval = INTERVAL;
 	uev_cron_init(&ctx, &cron, cron_job, NULL, when, interval);
 
+	uev_dump(&ctx);
+
 	rc = uev_run(&ctx, 0);
 	fail_unless(result == 0);
 
